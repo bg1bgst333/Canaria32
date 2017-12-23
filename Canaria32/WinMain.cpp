@@ -1,6 +1,5 @@
 // ヘッダのインクルード
 // 既定のヘッダ
-#include <stdio.h>		// C標準入出力
 #include <tchar.h>		// TCHAR型
 #include <windows.h>	// 標準WindowsAPI
 // 独自のヘッダ
@@ -24,7 +23,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	wc.hInstance = hInstance;	// アプリケーションインスタンスハンドルは引数のhInstanceを使う.
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);	// LoadIconでアプリケーション既定のアイコンをロード.
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);	// LoadCursorでアプリケーション既定のカーソルをロード.
-	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);	// GetStockObjectで白ブラシを背景色とする.
+	wc.hbrBackground = (HBRUSH)GetStockObject(LTGRAY_BRUSH);	// GetStockObjectでライトグレーブラシを背景色とする.
 	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);	// MAKEINTRESOURCEにメニューのリソースID(IDR_MENU1)を指定し, wc.lpszMenuNameに格納.
 	wc.cbClsExtra = 0;	// とりあえず0を指定.
 	wc.cbWndExtra = 0;	// とりあえず0を指定.
@@ -68,6 +67,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 // ウィンドウプロシージャWindowProcの定義
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
+	// スタティック変数の初期化.
+	static HBITMAP hBitmap = NULL;	// ビットマップハンドルhBitmapをNULLで初期化.
+
 	// ウィンドウメッセージの処理.
 	switch (uMsg){	// uMsgの値ごとに処理を振り分ける.
 
@@ -76,6 +78,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 			// WM_CREATEブロック
 			{
+
+				// 変数の宣言
+				HWND hPicture;	// ピクチャーコントロールのウィンドウハンドルhPicture.
+				LPCREATESTRUCT lpCS;	// CreateStruct構造体ポインタlpCS.
+
+				// lpCSの取得.
+				lpCS = (LPCREATESTRUCT)lParam;	// lParamをLPCREATESTRUCTにキャストして, lpCSに格納.
+
+				// ピクチャーコントロールの作成
+				hPicture = CreateWindow(_T("Static"), _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 640, 480, hwnd, (HMENU)(WM_APP + 1), lpCS->hInstance, NULL);	// CreateWindowでピクチャーコントロールhPictureを作成.(ウィンドウクラス名は"Static".)
 
 				// 常にウィンドウ作成に成功するものとする.
 				return 0;	// 0を返すと, ウィンドウ作成に成功したということになる.
@@ -90,6 +102,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 			// WM_DESTROYブロック
 			{
+
+				// ビットマップが残っていたら削除.
+				if (hBitmap != NULL){	// hBitmapがNULLでない.
+					// 削除.
+					DeleteObject(hBitmap);	// DeleteObjectでhBitmapを削除.
+					hBitmap = NULL;	// hBitmapにNULLをセット.
+				}
 
 				// 終了メッセージの送信.
 				PostQuitMessage(0);	// PostQuitMessageで終了コードを0としてWM_QUITメッセージを送信.
@@ -129,16 +148,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 							BOOL bRet = GetOpenFileName(&ofn);	// GetOpenFileNameでファイルダイアログを表示し, 選択されたファイル名を取得する.(戻り値をbRetに格納.)
 							if (bRet){	// 正常に選択された.
 
-								// ビットマップのロード.
-								HINSTANCE hInstance = (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE);	// GetWindowLongでアプリケーションインスタンスハンドルhInstanceを取得.
-								HBITMAP hBitmap = (HBITMAP)LoadImage(hInstance, tszPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);	// LoadImageでビットマップをロード.
-								if (hBitmap != NULL){	// hBitmapがNULLでない場合.
-									TCHAR tszHBitmap[32] = {0};	// tszHBitmapを{0}で初期化.
-									_stprintf(tszHBitmap, _T("hBitmap = %08x"), hBitmap);	// _stprintfでhBitmapを文字列tszHBitmapに変換.
-									MessageBox(hwnd, tszHBitmap, _T("Canaria"), MB_OK | MB_ICONASTERISK);	// MessageBoxでtszHBitmapを表示.
+								// ビットマップが既にロード済みの場合.
+								if (hBitmap != NULL){	// hBitmapがNULLでない.
+									// 一旦削除.
 									DeleteObject(hBitmap);	// DeleteObjectでhBitmapを削除.
+									hBitmap = NULL;	// hBitmapにNULLをセット.
 								}
 
+								// ビットマップのロード.
+								HINSTANCE hInstance = (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE);	// GetWindowLongでアプリケーションインスタンスハンドルhInstanceを取得.
+								hBitmap = (HBITMAP)LoadImage(hInstance, tszPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);	// LoadImageでビットマップをロード.
+							
 							}
 
 						}
