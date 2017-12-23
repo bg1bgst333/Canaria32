@@ -113,8 +113,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 						// ID_FILE_OPENブロック
 						{
 
-							// メッセージボックスで"ID_FILE_OPEN"と表示.
-							MessageBox(NULL, _T("ID_FILE_OPEN"), _T("Canaria"), MB_OK | MB_ICONASTERISK);	// MessageBoxで"ID_FILE_OPEN"と表示.
+							// "開く"ファイルの選択.
+							// 構造体・配列の初期化.
+							OPENFILENAME ofn = {0};	// OPENFILENAME構造体ofnを{0}で初期化.
+							TCHAR tszPath[_MAX_PATH] = {0};	// ファイルパスtszPathを{0}で初期化.
+							// パラメータのセット.
+							ofn.lStructSize = sizeof(OPENFILENAME);	// sizeofでOPENFILENAME構造体のサイズをセット.
+							ofn.hwndOwner = hwnd;	// hwndをセット.
+							ofn.lpstrFilter = _T("ビットマップ画像(*.bmp)\0*.bmp\0すべてのファイル(*.*)\0*.*\0\0");	// ビットマップ画像とすべてのファイルのフィルタをセット.
+							ofn.lpstrFile = tszPath;	// tszPathをセット.
+							ofn.nMaxFile = _MAX_PATH;	// _MAX_PATHをセット.
+							ofn.Flags = OFN_FILEMUSTEXIST;	// ファイルが存在しないと抜けられない.
+							// "開く"ファイルダイアログの表示.
+							BOOL bRet = GetOpenFileName(&ofn);	// GetOpenFileNameでファイルダイアログを表示し, 選択されたファイル名を取得する.(戻り値をbRetに格納.)
+							if (bRet){	// 正常に選択された.
+								// 選択されたファイル名を表示.
+								MessageBox(hwnd, tszPath, _T("Aoi"), MB_OK | MB_ICONASTERISK);	// MessageBoxでtszPathを表示.
+							}
 
 						}
 
