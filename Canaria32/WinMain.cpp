@@ -2,6 +2,8 @@
 // 既定のヘッダ
 #include <tchar.h>		// TCHAR型
 #include <windows.h>	// 標準WindowsAPI
+// 独自のヘッダ
+#include "resource.h"	// リソース
 
 // 関数のプロトタイプ宣言
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);	// ウィンドウプロシージャWindowProc
@@ -22,7 +24,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);	// LoadIconでアプリケーション既定のアイコンをロード.
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);	// LoadCursorでアプリケーション既定のカーソルをロード.
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);	// GetStockObjectで白ブラシを背景色とする.
-	wc.lpszMenuName = NULL;	// とりあえずメニューはなし.(NULLにする.)
+	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);	// MAKEINTRESOURCEにメニューのリソースID(IDR_MENU1)を指定し, wc.lpszMenuNameに格納.
 	wc.cbClsExtra = 0;	// とりあえず0を指定.
 	wc.cbWndExtra = 0;	// とりあえず0を指定.
 
