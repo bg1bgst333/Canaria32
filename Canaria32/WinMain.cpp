@@ -1,5 +1,6 @@
 // ヘッダのインクルード
 // 既定のヘッダ
+#include <stdio.h>		// C標準入出力
 #include <tchar.h>		// TCHAR型
 #include <windows.h>	// 標準WindowsAPI
 // 独自のヘッダ
@@ -127,8 +128,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 							// "開く"ファイルダイアログの表示.
 							BOOL bRet = GetOpenFileName(&ofn);	// GetOpenFileNameでファイルダイアログを表示し, 選択されたファイル名を取得する.(戻り値をbRetに格納.)
 							if (bRet){	// 正常に選択された.
-								// 選択されたファイル名を表示.
-								MessageBox(hwnd, tszPath, _T("Aoi"), MB_OK | MB_ICONASTERISK);	// MessageBoxでtszPathを表示.
+
+								// ビットマップのロード.
+								HINSTANCE hInstance = (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE);	// GetWindowLongでアプリケーションインスタンスハンドルhInstanceを取得.
+								HBITMAP hBitmap = (HBITMAP)LoadImage(hInstance, tszPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);	// LoadImageでビットマップをロード.
+								if (hBitmap != NULL){	// hBitmapがNULLでない場合.
+									TCHAR tszHBitmap[32] = {0};	// tszHBitmapを{0}で初期化.
+									_stprintf(tszHBitmap, _T("hBitmap = %08x"), hBitmap);	// _stprintfでhBitmapを文字列tszHBitmapに変換.
+									MessageBox(hwnd, tszHBitmap, _T("Canaria"), MB_OK | MB_ICONASTERISK);	// MessageBoxでtszHBitmapを表示.
+									DeleteObject(hBitmap);	// DeleteObjectでhBitmapを削除.
+								}
+
 							}
 
 						}
