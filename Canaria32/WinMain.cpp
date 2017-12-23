@@ -98,6 +98,56 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 			// 既定の処理へ向かう.
 			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
 
+		// コマンドが発生した時.
+		case WM_COMMAND:
+
+			// WM_COMMANDブロック
+			{
+
+				// コマンドの処理.
+				switch (LOWORD(wParam)){	// LOWORD(wParam)でリソースIDがわかるので, その値ごとに処理を振り分ける.
+
+					// "開く(&O)..."
+					case ID_FILE_OPEN:
+
+						// ID_FILE_OPENブロック
+						{
+
+							// メッセージボックスで"ID_FILE_OPEN"と表示.
+							MessageBox(NULL, _T("ID_FILE_OPEN"), _T("Canaria"), MB_OK | MB_ICONASTERISK);	// MessageBoxで"ID_FILE_OPEN"と表示.
+
+						}
+
+						// 既定の処理へ向かう.
+						break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+
+					// "名前を付けて保存(&A)..."
+					case ID_FILE_SAVE_AS:
+
+						// ID_FILE_SAVE_ASブロック
+						{
+
+							// メッセージボックスで"ID_FILE_SAVE_AS"と表示.
+							MessageBox(NULL, _T("ID_FILE_SAVE_AS"), _T("Canaria"), MB_OK | MB_ICONASTERISK);	// MessageBoxで"ID_FILE_SAVE_AS"と表示.
+
+						}
+					
+						// 既定の処理へ向かう.
+						break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+
+					// それ以外.
+					default:
+
+						// 既定の処理へ向かう.
+						break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+
+				}
+
+			}
+
+			// 既定の処理へ向かう.
+			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+
 		// 上記以外の時.
 		default:
 

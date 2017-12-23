@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "winres.h"
-
+#include "winres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -51,8 +50,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,2
- PRODUCTVERSION 0,0,0,2
+ FILEVERSION 0,0,0,3
+ PRODUCTVERSION 0,0,0,3
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x29L
@@ -67,10 +66,10 @@ BEGIN
     BEGIN
         BLOCK "041104b0"
         BEGIN
-            VALUE "Comments", "Otsuki #2"
+            VALUE "Comments", "Otsuki #3"
             VALUE "CompanyName", "B.G-STATION"
-            VALUE "FileDescription", "Otsuki #2"
-            VALUE "FileVersion", "0, 0, 0, 2"
+            VALUE "FileDescription", "Otsuki #3"
+            VALUE "FileVersion", "0, 0, 0, 3"
             VALUE "InternalName", "Canaria32"
             VALUE "LegalCopyright", "Copyright (C) 2005-2017 B.G-STATION, All rights reserved."
             VALUE "LegalTrademarks", "B.G-STATION"
@@ -112,8 +111,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
-
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
