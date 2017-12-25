@@ -5,6 +5,9 @@
 // 独自のヘッダ
 #include "resource.h"	// リソース
 
+// マクロの定義
+#define SCROLLBAR_THICKNESS 16	// とりあえずスクロールバーの厚さはマクロで16としておく.
+
 // 関数のプロトタイプ宣言
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);	// ウィンドウプロシージャWindowProc
 
@@ -70,6 +73,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 	// スタティック変数の初期化.
 	static HWND hPicture = NULL;	// ピクチャーコントロールハンドルhPictureをNULLで初期化.
 	static HBITMAP hBitmap = NULL;	// ビットマップハンドルhBitmapをNULLで初期化.
+	static BITMAP bitmap = {0};	// BITMAP構造体オブジェクトbitmapを{0}で初期化.
+	static HDC hMemDC = NULL;	// メモリデバイスコンテキストハンドルhMemDCをNULLで初期化.
+	static int iHScrollPos = 0;	// iHScrollPosを0で初期化.
+	static int iVScrollPos = 0;	// iVScrollPosを0で初期化.
 	static SCROLLINFO scrollInfo = {0};	// スクロール情報構造体scrollInfoを{0}で初期化.
 	static WNDPROC lpfnWndProc = NULL;	// 既定のウィンドウプロシージャlpfnWndProcをNULLで初期化.
 
@@ -90,7 +97,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 				// ピクチャーコントロールの作成
 				//hPicture = CreateWindow(_T("Static"), _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP | SS_REALSIZEIMAGE, 0, 0, 640, 480, hwnd, (HMENU)(WM_APP + 1), lpCS->hInstance, NULL);	// CreateWindowでピクチャーコントロールhPictureを作成.(ウィンドウクラス名は"Static".SS_REALSIZEIMAGEなので画像サイズに合わせてコントロールのサイズも変化.)
-				hPicture = CreateWindow(_T("Static"), _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER | WS_HSCROLL | WS_VSCROLL | SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 640, 480, hwnd, (HMENU)(WM_APP + 1), lpCS->hInstance, NULL);	// CreateWindowでピクチャーコントロールhPictureを作成.(ウィンドウクラス名は"Static".SS_REALSIZECONTROLなのでコントロールサイズに合わせて画像が拡大縮小される.)
+				hPicture = CreateWindow(_T("Static"), _T(""), WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL | SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 640, 480, hwnd, (HMENU)(WM_APP + 1), lpCS->hInstance, NULL);	// CreateWindowでピクチャーコントロールhPictureを作成.(ウィンドウクラス名は"Static".SS_REALSIZECONTROLなのでコントロールサイズに合わせて画像が拡大縮小される.)
 
 				// ピクチャーコントロール既定のウィンドウプロシージャを取得し, WindowProcに差し替える.
 				lpfnWndProc = (WNDPROC)GetWindowLong(hPicture, GWL_WNDPROC);	// GetWindowLongでプロシージャlpfnWndProcを取得.
@@ -126,6 +133,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 			// WM_DESTROYブロック
 			{
 
+				// メモリデバイスコンテキストの破棄.
+				if (hMemDC != NULL){	// hMemDCがNULLでなければ.
+					// 削除.
+					DeleteDC(hMemDC);	// DeleteDCでhMemDCを解放.
+					hMemDC = NULL;	// hMemDCにNULLをセット.
+				}
 				// ビットマップが残っていたら削除.
 				if (hBitmap != NULL){	// hBitmapがNULLでない.
 					// 削除.
@@ -135,6 +148,64 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 				// 終了メッセージの送信.
 				PostQuitMessage(0);	// PostQuitMessageで終了コードを0としてWM_QUITメッセージを送信.
+
+			}
+
+			// 既定の処理へ向かう.
+			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+
+		// 画面の描画を要求された時.
+		case WM_PAINT:
+
+			// WM_PAINTブロック
+			{
+
+				// hPictureの時はこちらで描画.
+				if (hwnd == hPicture){	// hwndとhPictureが同じ時.
+
+					// 変数の初期化.
+					HDC hDC = NULL;	// hDCをNULLで初期化.
+					PAINTSTRUCT ps = {0};	// psを{0}で初期化.
+					HBITMAP hOld = NULL;	// hOldをNULLで初期化.
+					int iDrawWidth;	// 実際の描画幅.
+					int iDrawHeight;	// 実際の描画高さ.
+
+					// 描画開始.
+					hDC = BeginPaint(hwnd, &ps);	// BeginPaintで描画開始.
+
+					// ビットマップの選択.
+					hOld = (HBITMAP)SelectObject(hMemDC, hBitmap);	// SelectObjectでhMemDCにhBitmapを選択.
+					
+					// ビット転送.
+					iDrawWidth = 640 - SCROLLBAR_THICKNESS;	// 描画幅 = ピクチャーコントロール幅 - スクロールバー幅.
+					iDrawHeight = 480 - SCROLLBAR_THICKNESS;	// 描画高さ = ピクチャーコントロール高さ - スクロールバー高さ.
+					BitBlt(hDC, 0, 0, iDrawWidth, iDrawHeight, hMemDC, iHScrollPos, iVScrollPos, SRCCOPY);	// BitBltでhMemDCをhDCに転送.
+
+					// 古いビットマップを再選択して戻す.
+					SelectObject(hMemDC, hOld);	// SelectObjectでhOldを選択.
+
+					// スクロールバー設定.
+					// 水平方向.
+					ZeroMemory(&scrollInfo, sizeof(SCROLLINFO));	// ZeroMemoryでscrollInfoをクリア.
+					scrollInfo.cbSize = sizeof(SCROLLINFO);	// サイズ
+					scrollInfo.fMask = SIF_PAGE | SIF_RANGE;	// フラグ
+					scrollInfo.nPage = iDrawWidth;	// 描画幅
+					scrollInfo.nMin = 0;	// 最小値
+					scrollInfo.nMax = bitmap.bmWidth;	//最大値
+					SetScrollInfo(hwnd, SB_HORZ, &scrollInfo, FALSE);	// SetScrollInfoでセット.
+					// 垂直方向.
+					ZeroMemory(&scrollInfo, sizeof(SCROLLINFO));	// ZeroMemoryでscrollInfoをクリア.
+					scrollInfo.cbSize = sizeof(SCROLLINFO);	// サイズ
+					scrollInfo.fMask = SIF_PAGE | SIF_RANGE;	// フラグ
+					scrollInfo.nPage = iDrawHeight;	// 描画高さ
+					scrollInfo.nMin = 0;	// 最小値
+					scrollInfo.nMax = bitmap.bmHeight;	//最大値
+					SetScrollInfo(hwnd, SB_VERT, &scrollInfo, FALSE);	// SetScrollInfoでセット.
+
+					// 描画終了.
+					EndPaint(hwnd, &ps);	// EndPaintで描画終了.
+
+				}
 
 			}
 
@@ -182,9 +253,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 								HINSTANCE hInstance = (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE);	// GetWindowLongでアプリケーションインスタンスハンドルhInstanceを取得.
 								hBitmap = (HBITMAP)LoadImage(hInstance, tszPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);	// LoadImageでビットマップをロード.
 
+								// 画像の幅と高さを取得.
+								ZeroMemory(&bitmap, sizeof(BITMAP));	// ZeroMemoryでbitmapを0で初期化.
+								GetObject(hBitmap, sizeof(BITMAP), &bitmap);	// GetObjectでhBitmapからBITMAP構造体を取得.
+								
+								// デバイスコンテキストハンドルの初期化.
+								HDC hDC = NULL;	// hDCをNULLで初期化.
+
+								// デバイスコンテキストハンドルの取得.
+								hDC = GetDC(hPicture);	// GetDCでhPictureのデバイスコンテキストhDCを取得.
+
+								// いったんメモリデバイスコンテキストの破棄.
+								if (hMemDC != NULL){	// hMemDCがNULLでなければ.
+									DeleteDC(hMemDC);	// DeleteDCでhMemDCを解放.
+									hMemDC = NULL;	// hMemDCにNULLをセット.
+								}
+
+								// メモリデバイスコンテキストの作成.
+								hMemDC = CreateCompatibleDC(hDC);	// CreateCompatibleDCでhDCからhMemDCを作成.
+
 								// ビットマップの表示.
 								SendMessage(hPicture, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hBitmap);	// SendMessageでSTM_SETIMAGEを送ることでhBitmapを表示.
-							
+
+								// デバイスコンテキストの解放.
+								ReleaseDC(hPicture, hDC);	// ReleaseDCでhDCを解放.
+
+								// 無効領域を作成して画面の更新.
+								InvalidateRect(hwnd, NULL, TRUE);	// InvalidateRectで更新.
+
 							}
 
 						}
@@ -225,7 +321,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 			// WM_HSCROLLブロック
 			{
 				
-				// hwndがhPictureの時は, 元々のウィンドウプロシージャに任せる.
+				// hwndがhPictureの時は, 最終的には元々のウィンドウプロシージャに任せる.
 				if (hwnd == hPicture){	// hwndとhPictureが同じ時.
 
 					// スクロール情報取得.
@@ -363,7 +459,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 					// スクロール情報設定.
 					SetScrollInfo(hwnd, SB_HORZ, &scrollInfo, TRUE);	// SetScrollInfoでスクロール情報をセット.
-
+					// 水平位置のセット.
+					iHScrollPos = scrollInfo.nPos;	// iHScrollPosにscrollInfo.nPosをセット.
+					// 無効領域を作成して画面の更新.
+					InvalidateRect(hwnd, NULL, TRUE);	// InvalidateRectで更新.
 					// 元々のピクチャーコントロールのウィンドウプロシージャに任せる.
 					return CallWindowProc(lpfnWndProc, hwnd, uMsg, wParam, lParam);	// CallWindowProcでlpfnWndProcに任せる.
 
@@ -380,7 +479,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 			// WM_VSCROLLブロック
 			{
 				
-				// hwndがhPictureの時は, 元々のウィンドウプロシージャに任せる.
+				// hwndがhPictureの時は, 最終的には元々のウィンドウプロシージャに任せる.
 				if (hwnd == hPicture){	// hwndとhPictureが同じ時.
 
 					// スクロール情報取得.
@@ -518,7 +617,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 					// スクロール情報設定.
 					SetScrollInfo(hwnd, SB_VERT, &scrollInfo, TRUE);	// SetScrollInfoでスクロール情報をセット.
-
+					// 垂直位置のセット.
+					iVScrollPos = scrollInfo.nPos;	// iVScrollPosにscrollInfo.nPosをセット.
+					// 無効領域を作成して画面の更新.
+					InvalidateRect(hwnd, NULL, TRUE);	// InvalidateRectで更新.
 					// 元々のピクチャーコントロールのウィンドウプロシージャに任せる.
 					return CallWindowProc(lpfnWndProc, hwnd, uMsg, wParam, lParam);	// CallWindowProcでlpfnWndProcに任せる.
 
