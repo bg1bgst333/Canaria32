@@ -77,6 +77,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 	static HDC hMemDC = NULL;	// メモリデバイスコンテキストハンドルhMemDCをNULLで初期化.
 	static int iHScrollPos = 0;	// iHScrollPosを0で初期化.
 	static int iVScrollPos = 0;	// iVScrollPosを0で初期化.
+	static int iWidth = 0;	// クライアント領域幅iWidth.
+	static int iHeight = 0;	// クライアント領域高さiHeight.
 	static SCROLLINFO scrollInfo = {0};	// スクロール情報構造体scrollInfoを{0}で初期化.
 	static WNDPROC lpfnWndProc = NULL;	// 既定のウィンドウプロシージャlpfnWndProcをNULLで初期化.
 
@@ -97,7 +99,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 				// ピクチャーコントロールの作成
 				//hPicture = CreateWindow(_T("Static"), _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP | SS_REALSIZEIMAGE, 0, 0, 640, 480, hwnd, (HMENU)(WM_APP + 1), lpCS->hInstance, NULL);	// CreateWindowでピクチャーコントロールhPictureを作成.(ウィンドウクラス名は"Static".SS_REALSIZEIMAGEなので画像サイズに合わせてコントロールのサイズも変化.)
-				hPicture = CreateWindow(_T("Static"), _T(""), WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL | SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 640, 480, hwnd, (HMENU)(WM_APP + 1), lpCS->hInstance, NULL);	// CreateWindowでピクチャーコントロールhPictureを作成.(ウィンドウクラス名は"Static".SS_REALSIZECONTROLなのでコントロールサイズに合わせて画像が拡大縮小される.)
+				hPicture = CreateWindow(_T("Static"), _T(""), WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL | SS_BITMAP | SS_REALSIZECONTROL, 0, 0, iWidth, iHeight, hwnd, (HMENU)(WM_APP + 1), lpCS->hInstance, NULL);	// CreateWindowでピクチャーコントロールhPictureを作成.(ウィンドウクラス名は"Static".SS_REALSIZECONTROLなのでコントロールサイズに合わせて画像が拡大縮小される.)
 
 				// ピクチャーコントロール既定のウィンドウプロシージャを取得し, WindowProcに差し替える.
 				lpfnWndProc = (WNDPROC)GetWindowLong(hPicture, GWL_WNDPROC);	// GetWindowLongでプロシージャlpfnWndProcを取得.
@@ -107,16 +109,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 				// 水平方向の設定.
 				scrollInfo.cbSize = sizeof(SCROLLINFO);	// サイズはsizeof(SCROLLINFO).
 				scrollInfo.fMask = SIF_PAGE | SIF_RANGE;	// 設定する項目のフラグはページとレンジ.
-				scrollInfo.nPage = 50;
+				scrollInfo.nPage = 0;	// 最初は0.
 				scrollInfo.nMin = 0;	// 最小値は0.
-				scrollInfo.nMax = 400;
+				scrollInfo.nMax = 0;	// 最初は0.
 				SetScrollInfo(hPicture, SB_HORZ, &scrollInfo, FALSE);	// SetScrollInfoでscrollInfoをセット.
 				// 垂直方向の設定.
 				scrollInfo.cbSize = sizeof(SCROLLINFO);	// サイズはsizeof(SCROLLINFO).
 				scrollInfo.fMask = SIF_PAGE | SIF_RANGE;	// 設定する項目のフラグはページとレンジ.
-				scrollInfo.nPage = 50;
+				scrollInfo.nPage = 0;	// 最初は0.
 				scrollInfo.nMin = 0;	// 最小値は0.
-				scrollInfo.nMax = 400;
+				scrollInfo.nMax = 0;	// 最初は0.
 				SetScrollInfo(hPicture, SB_VERT, &scrollInfo, FALSE);	// SetScrollInfoでscrollInfoをセット.
 
 				// 常にウィンドウ作成に成功するものとする.
@@ -154,6 +156,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 			// 既定の処理へ向かう.
 			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
 
+		// ウィンドウサイズが変更された時.
+		case WM_SIZE:
+
+			// WM_SIZEブロック
+			{
+
+				// 外側のウィンドウの場合.
+				if (hwnd != hPicture){	// hwndとhPictureが同じでない時.
+
+					// クライアント領域の変更後のサイズを取得.
+					iWidth = LOWORD(lParam);	// LOWORD(lParam)でクライアント領域の幅を取得し, iWidthに格納.
+					iHeight = HIWORD(lParam);	// HIWORD(lParam)でクライアント領域の高さを取得し, iHeightに格納.
+
+					// ウィンドウのサイズ変更.
+					MoveWindow(hPicture, 0, 0, iWidth, iHeight, TRUE);	// MoveWindowでhPictureのサイズをクライアント領域と同じにする.
+
+				}
+
+			}
+
+			// 既定の処理へ向かう.
+			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+
 		// 画面の描画を要求された時.
 		case WM_PAINT:
 
@@ -177,8 +202,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 					hOld = (HBITMAP)SelectObject(hMemDC, hBitmap);	// SelectObjectでhMemDCにhBitmapを選択.
 					
 					// ビット転送.
-					iDrawWidth = 640 - SCROLLBAR_THICKNESS;	// 描画幅 = ピクチャーコントロール幅 - スクロールバー幅.
-					iDrawHeight = 480 - SCROLLBAR_THICKNESS;	// 描画高さ = ピクチャーコントロール高さ - スクロールバー高さ.
+					iDrawWidth = iWidth - SCROLLBAR_THICKNESS;	// 描画幅 = ピクチャーコントロール幅 - スクロールバー幅.
+					iDrawHeight = iHeight - SCROLLBAR_THICKNESS;	// 描画高さ = ピクチャーコントロール高さ - スクロールバー高さ.
 					BitBlt(hDC, 0, 0, iDrawWidth, iDrawHeight, hMemDC, iHScrollPos, iVScrollPos, SRCCOPY);	// BitBltでhMemDCをhDCに転送.
 
 					// 古いビットマップを再選択して戻す.
