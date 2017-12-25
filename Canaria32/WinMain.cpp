@@ -319,8 +319,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 						// ID_FILE_SAVE_ASブロック
 						{
 
-							// メッセージボックスで"ID_FILE_SAVE_AS"と表示.
-							MessageBox(NULL, _T("ID_FILE_SAVE_AS"), _T("Canaria"), MB_OK | MB_ICONASTERISK);	// MessageBoxで"ID_FILE_SAVE_AS"と表示.
+							// "名前を付けて保存"するファイルの選択.
+							// 構造体・配列の初期化.
+							OPENFILENAME ofn = {0};	// OPENFILENAME構造体ofnを{0}で初期化.
+							TCHAR tszPath[_MAX_PATH] =  {0};	// ファイルパスtszPathを{0}で初期化.
+							// パラメータのセット.
+							ofn.lStructSize = sizeof(OPENFILENAME);	// sizeofでOPENFILENAME構造体のサイズをセット.
+							ofn.hwndOwner = hwnd;	// hwndをセット.
+							ofn.lpstrFilter = _T("ビットマップ画像(*.bmp)\0*.bmp\0すべてのファイル(*.*)\0*.*\0\0");	// ビットマップ画像とすべてのファイルのフィルタをセット.
+							ofn.lpstrFile = tszPath;	// tszPathをセット.
+							ofn.nMaxFile = _MAX_PATH;	// _MAX_PATHをセット.
+							ofn.Flags = OFN_OVERWRITEPROMPT;	// 既にファイルがある時, 上書きするかの確認を表示.
+							// "名前を付けて保存"ファイルダイアログを表示.
+							BOOL bRet = GetSaveFileName(&ofn);	// GetSaveFileNameでファイルダイアログを表示し, 選択されたファイル名を取得する.(戻り値をbRetに格納.)
+							if (bRet){	// 正常に選択された.
+								// 選択されたファイル名を表示.
+								MessageBox(hwnd, tszPath, _T("Canaria"), MB_OK | MB_ICONASTERISK);	// MessageBoxでtszPathを表示.
+							}
 
 						}
 					
