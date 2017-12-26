@@ -1,5 +1,8 @@
 // ヘッダのインクルード
 // 既定のヘッダ
+#include <stdio.h>		// C標準入出力
+#include <stdlib.h>		// C標準ユーティリティ
+#include <locale.h>		// ロケール
 #include <tchar.h>		// TCHAR型
 #include <windows.h>	// 標準WindowsAPI
 // 独自のヘッダ
@@ -333,8 +336,55 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 							// "名前を付けて保存"ファイルダイアログを表示.
 							BOOL bRet = GetSaveFileName(&ofn);	// GetSaveFileNameでファイルダイアログを表示し, 選択されたファイル名を取得する.(戻り値をbRetに格納.)
 							if (bRet){	// 正常に選択された.
-								// 選択されたファイル名を表示.
-								MessageBox(hwnd, tszPath, _T("Canaria"), MB_OK | MB_ICONASTERISK);	// MessageBoxでtszPathを表示.
+								
+								// 変数の初期化.
+								BITMAPINFO bi = {0};	// BITMAPINFO構造体変数biを{0}で初期化.
+								LPBYTE lpBitsPixel = NULL;	// LPBYTE型(BYTE型ポインタ)のlpBitsPixelをNULLで初期化.
+								BITMAPFILEHEADER bfh = {0};	// BITMAPFILEHEADER構造体bfhを{0}で初期化.
+								HDC hDC = NULL;	// hDCをNULLで初期化.
+								FILE *fp = NULL;	// ファイルポインタfpをNULLで初期化.
+
+								// ビットマップ情報のセット.
+								bi.bmiHeader.biBitCount = 24;	// ひとまず24bitビットマップのみ対応.
+								bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);	// BITMAPINFOHEADERのサイズを指定しておく.
+								bi.bmiHeader.biWidth = bitmap.bmWidth;	// 画像幅bitmap.bmWidthをセット.
+								bi.bmiHeader.biHeight = bitmap.bmHeight;	// 画像高さbitmap.bmHeightをセット.
+								bi.bmiHeader.biPlanes = 1;	// 1をセット.
+								bi.bmiHeader.biCompression = BI_RGB;	// RGB.
+
+								// DDBからDIBのピクセル列を取得.
+								hDC = GetDC(hPicture);	// GetDCでhPictureのデバイスコンテキストhDCを取得.
+								GetDIBits(hDC, hBitmap, 0, bitmap.bmHeight, NULL, &bi, DIB_RGB_COLORS);	// GetDIBitsでピクセル列のサイズ(bi.bmiHeader.biSizeImage)を取得.
+								lpBitsPixel = new BYTE[bi.bmiHeader.biSizeImage];	// ピクセル列用のメモリ確保.
+								GetDIBits(hDC, hBitmap, 0, bitmap.bmHeight, lpBitsPixel, &bi, DIB_RGB_COLORS);	// GetDIBitsでピクセル列を取得.
+								ReleaseDC(hPicture, hDC);	// hDCをリリース.
+
+								// ビットマップファイル情報のセット.(24bitビットマップの場合.)
+								bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);	// ピクセル列以外のサイズ.(つまりヘッダのサイズ.)
+								bfh.bfSize = bfh.bfOffBits + bi.bmiHeader.biSizeImage;	// 全体のサイズはヘッダ + ピクセル列.
+								bfh.bfType = 0x4d42;	// 0x4d42("BM")はビットマップであるという意味.
+								bfh.bfReserved1 = 0;	// ここは0をセット.
+								bfh.bfReserved2 = 0;	// ここは0をセット.
+
+								// ファイルの書き込み.
+								// 日本語ロケールのセット.
+								setlocale(LC_ALL, "Japanese");	// setlocaleで"Japanese"をセット.
+								// ファイル名をマルチバイトに変換.
+								size_t filename_len = wcstombs(NULL, tszPath, _MAX_PATH);	// wcstombsで長さfilename_lenを求める.(filename_lenにNULL文字は含まれない.)
+								char *path = (char *)malloc(sizeof(char) * (filename_len + 1));	// mallocで動的配列を確保し, アドレスをpathに格納.
+								wcstombs(path, tszPath, _MAX_PATH);	// wcstombsでTCHARからマルチバイトへ変換.
+								// ファイルを開く.
+								fp = fopen(path, "wb");	// バイナリモード("wb")で開く.
+								if (fp != NULL){	// fpがNULLでない時.
+									fwrite(&bfh, sizeof(BITMAPFILEHEADER), 1, fp);	// fwriteでbfhを書き込む.
+									fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, fp);	// fwriteでbiを書き込む.
+									fwrite(lpBitsPixel, sizeof(BYTE), bi.bmiHeader.biSizeImage, fp);	// fwriteでlpBitsPixelを書き込む.
+									fclose(fp);	// fcloseでfpを閉じる.
+								}
+								// メモリの解放.
+								free(path);	// freeでpathを解放.
+								delete[] lpBitsPixel;	// delete[]でlpBitsPixelを解放.
+
 							}
 
 						}
