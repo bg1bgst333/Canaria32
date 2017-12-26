@@ -721,6 +721,38 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 			// 既定の処理へ向かう.
 			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
 
+		// 左クリックが発生した時.
+		case WM_LBUTTONDOWN:
+
+			// WM_LBUTTONDOWNブロック
+			{
+
+				// hwndがhPictureの時は, 最終的には元々のウィンドウプロシージャに任せる.
+				if (hwnd == hPicture){	// hwndとhPictureが同じ時.
+
+					// 座標の取得.
+					int x = LOWORD(lParam);	// LOWORD(lParam)がx座標.
+					int y = HIWORD(lParam);	// HIWORD(lParam)がy座標.
+
+					// ビットマップの選択.
+					HBITMAP hOld = (HBITMAP)SelectObject(hMemDC, hBitmap);	// SelectObjectでhBitmapを選択.
+
+					// 押された場所に黒い点をセット.
+					SetPixel(hMemDC, x + iHScrollPos, y + iVScrollPos, RGB(0x0, 0x0, 0x0));	// SetPixelで黒い点をセット.
+
+					// 古いビットマップを再選択.
+					SelectObject(hMemDC, hOld);	// SelectObjectでhOldを選択.
+
+					// 画面更新.
+					InvalidateRect(hwnd, NULL, TRUE);	// InvalidateRectで画面更新.
+
+				}
+
+			}
+
+			// 既定の処理へ向かう.
+			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+
 		// 上記以外の時.
 		default:
 
