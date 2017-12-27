@@ -82,7 +82,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 	static int iVScrollPos = 0;	// iVScrollPosを0で初期化.
 	static int iWidth = 0;	// クライアント領域幅iWidth.
 	static int iHeight = 0;	// クライアント領域高さiHeight.
-	static BOOL bLButtonDown = FALSE;	// bLButtonDownをFALSEで初期化.
 	static SCROLLINFO scrollInfo = {0};	// スクロール情報構造体scrollInfoを{0}で初期化.
 	static WNDPROC lpfnWndProc = NULL;	// 既定のウィンドウプロシージャlpfnWndProcをNULLで初期化.
 
@@ -731,12 +730,61 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 				// hwndがhPictureの時は, 最終的には元々のウィンドウプロシージャに任せる.
 				if (hwnd == hPicture){	// hwndとhPictureが同じ時.
 
-					// マウスダウンフラグが立っている時.
-					if (bLButtonDown){	// bLButtonDownが真の時.
+					// 座標の取得.
+					int x = LOWORD(lParam);	// LOWORD(lParam)がx座標.
+					int y = HIWORD(lParam);	// HIWORD(lParam)がy座標.
 
-						// 座標の取得.
-						int x = LOWORD(lParam);	// LOWORD(lParam)がx座標.
-						int y = HIWORD(lParam);	// HIWORD(lParam)がy座標.
+					// マウスダウンフラグが立っている時.
+					if (wParam == MK_LBUTTON){	// 左ボタンが押されている時.
+
+						// ビットマップの選択.
+						HBITMAP hOld = (HBITMAP)SelectObject(hMemDC, hBitmap);	// SelectObjectでhBitmapを選択.
+
+						// 押された場所に黒い点をセット.
+						SetPixel(hMemDC, x + iHScrollPos, y + iVScrollPos, RGB(0x0, 0x0, 0x0));	// SetPixelで黒い点をセット.
+
+						// 前回の場所から押された場所までの直線を描く.
+						LineTo(hMemDC, x + iHScrollPos, y + iVScrollPos);	// LineToで押された場所までの直線を描く.
+
+						// 押された場所に始点を移動.
+						MoveToEx(hMemDC, x + iHScrollPos, y + iVScrollPos, NULL);	// MoveToExで始点を移動.
+
+						// 古いビットマップを再選択.
+						SelectObject(hMemDC, hOld);	// SelectObjectでhOldを選択.
+
+						// 画面更新.
+						InvalidateRect(hwnd, NULL, TRUE);	// InvalidateRectで画面更新.
+
+					}
+					else{	// マウスダウンフラグが立っていない時.
+
+						// マウスの移動場所に始点を移動.
+						MoveToEx(hMemDC, x + iHScrollPos, y + iVScrollPos, NULL);	// MoveToExで始点を移動.
+
+					}
+
+				}
+
+			}
+
+			// 既定の処理へ向かう.
+			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+
+		// マウスの左ボタンが押された時.
+		case WM_LBUTTONDOWN:
+
+			// WM_LBUTTONDOWNブロック
+			{
+
+				// hwndがhPictureの時は, 最終的には元々のウィンドウプロシージャに任せる.
+				if (hwnd == hPicture){	// hwndとhPictureが同じ時.
+
+					// 座標の取得.
+					int x = LOWORD(lParam);	// LOWORD(lParam)がx座標.	
+					int y = HIWORD(lParam);	// HIWORD(lParam)がy座標.
+
+					// マウスダウンフラグが立っている時.
+					if (wParam == MK_LBUTTON){	// 左ボタンが押されている時.
 
 						// ビットマップの選択.
 						HBITMAP hOld = (HBITMAP)SelectObject(hMemDC, hBitmap);	// SelectObjectでhBitmapを選択.
@@ -759,43 +807,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 			// 既定の処理へ向かう.
 			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
 
-		// マウスの左ボタンが押された時.
-		case WM_LBUTTONDOWN:
-
-			// WM_LBUTTONDOWNブロック
-			{
-
-				// hwndがhPictureの時は, 最終的には元々のウィンドウプロシージャに任せる.
-				if (hwnd == hPicture){	// hwndとhPictureが同じ時.
-
-					// マウスダウンフラグを立てる.
-					bLButtonDown = TRUE;	// bLButtonDownをTRUEにセット.
-
-#if 0
-					// 座標の取得.
-					int x = LOWORD(lParam);	// LOWORD(lParam)がx座標.
-					int y = HIWORD(lParam);	// HIWORD(lParam)がy座標.
-
-					// ビットマップの選択.
-					HBITMAP hOld = (HBITMAP)SelectObject(hMemDC, hBitmap);	// SelectObjectでhBitmapを選択.
-
-					// 押された場所に黒い点をセット.
-					SetPixel(hMemDC, x + iHScrollPos, y + iVScrollPos, RGB(0x0, 0x0, 0x0));	// SetPixelで黒い点をセット.
-
-					// 古いビットマップを再選択.
-					SelectObject(hMemDC, hOld);	// SelectObjectでhOldを選択.
-
-					// 画面更新.
-					InvalidateRect(hwnd, NULL, TRUE);	// InvalidateRectで画面更新.
-#endif
-
-				}
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
 		// マウスの左ボタンが離されたとき.
 		case WM_LBUTTONUP:
 
@@ -805,8 +816,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 				// hwndがhPictureの時は, 最終的には元々のウィンドウプロシージャに任せる.
 				if (hwnd == hPicture){	// hwndとhPictureが同じ時.
 
-					// マウスダウンフラグを降ろす.
-					bLButtonDown = FALSE;	// bLButtonDownをFALSEにセット.
+					// 座標の取得.
+					int x = LOWORD(lParam);	// LOWORD(lParam)がx座標.
+					int y = HIWORD(lParam);	// HIWORD(lParam)がy座標.
+
+					// マウスダウンフラグが立っている時.
+					if (wParam == MK_LBUTTON){	// 左ボタンが押されている時.
+
+						// ビットマップの選択.
+						HBITMAP hOld = (HBITMAP)SelectObject(hMemDC, hBitmap);	// SelectObjectでhBitmapを選択.
+
+						// 押された場所に黒い点をセット.
+						SetPixel(hMemDC, x + iHScrollPos, y + iVScrollPos, RGB(0x0, 0x0, 0x0));	// SetPixelで黒い点をセット.
+
+						// 古いビットマップを再選択.
+						SelectObject(hMemDC, hOld);	// SelectObjectでhOldを選択.
+
+						// 画面更新.
+						InvalidateRect(hwnd, NULL, TRUE);	// InvalidateRectで画面更新.
+
+					}
 
 				}
 
