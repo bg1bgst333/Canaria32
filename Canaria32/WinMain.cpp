@@ -1,12 +1,12 @@
 // ヘッダのインクルード
 // 独自のヘッダ
-#include "Application.h"	// CApplication
+#include "MainApplication.h"	// CMainApplication
 
 // _tWinMain関数の定義
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd){
 
 	// オブジェクトの宣言.
-	CApplication app;	// CApplicationオブジェクトapp.
+	CMainApplication app;	// CMainApplicationオブジェクトapp.
 
 	// インスタンスの初期化.
 	if (!app.InitInstance(hInstance, lpCmdLine, nShowCmd)){	// app.InitInstanceがFALSEの場合.
