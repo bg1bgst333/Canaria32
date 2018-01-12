@@ -4,14 +4,9 @@
 
 // ヘッダのインクルード
 // 既定のヘッダ
-#include <stdio.h>		// C標準入出力
-#include <stdlib.h>		// C標準ユーティリティ
-#include <locale.h>		// ロケール
 #include <tchar.h>		// TCHAR型
 #include <windows.h>	// 標準WindowsAPI
-
-// マクロの定義
-#define SCROLLBAR_THICKNESS 16	// とりあえずスクロールバーの厚さはマクロで16としておく.
+#include <map>	// std::map
 
 // ウィンドウクラスCWindow
 class CWindow{
@@ -21,6 +16,8 @@ class CWindow{
 
 		// publicメンバ変数
 		HWND m_hWnd;	// HWND型ウィンドウハンドルm_hWnd.
+		// staticメンバ変数
+		static std::map<HWND, CWindow *>m_mapWindowMap;	// ウィンドウハンドルをキー, CWindowオブジェクトポインタを値とするマップm_mapWindowMap.
 
 		// publicメンバ関数
 		// コンストラクタ
@@ -28,15 +25,28 @@ class CWindow{
 		~CWindow();	// デストラクタ~CWindow()
 
 		// staticメンバ関数
+		static BOOL RegisterClass(HINSTANCE hInstance);	// ウィンドウクラス登録関数RegisterClass.(ウィンドウクラス名省略バージョン.)
 		static BOOL RegisterClass(HINSTANCE hInstance, LPCTSTR lpctszClassName);	// ウィンドウクラス登録関数RegisterClass.
-
+		static BOOL RegisterClass(HINSTANCE hInstance, LPCTSTR lpctszClassName, WNDPROC lpfnWndProc);	// ウィンドウクラス登録関数RegisterClass.(ウィンドウプロシージャ指定バージョン.)
+		static BOOL RegisterClass(HINSTANCE hInstance, LPCTSTR lpctszClassName, LPCTSTR lpszMenuName);	// ウィンドウクラス登録関数RegisterClass.(ウィンドウプロシージャ省略, メニュー名指定バージョン.)
+		static BOOL RegisterClass(HINSTANCE hInstance, LPCTSTR lpctszClassName, WNDPROC lpfnWndProc, LPCTSTR lpszMenuName);	// ウィンドウクラス登録関数RegisterClass.(メニュー名指定バージョン.)
+		static LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);	// スタティックウィンドウプロシージャStaticWindowProc.
 		// メンバ関数
+		virtual BOOL Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, int iWidth, int iHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance);	// ウィンドウ作成関数Create.(ウィンドウクラス名省略バージョン.)
 		virtual BOOL Create(LPCTSTR lpctszClassName, LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, int iWidth, int iHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance);	// ウィンドウ作成関数Create.
 		virtual BOOL ShowWindow(int nCmdShow);	// ウィンドウ表示関数ShowWindow.
+		virtual LRESULT DynamicWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);	// ダイナミックウィンドウプロシージャDynamicWindowProc.
+		virtual int OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct);	// ウィンドウの作成が開始された時.
+		virtual void OnDestroy();	// ウィンドウが破棄された時.
+		virtual void OnSize(UINT nType, int cx, int cy);	// ウィンドウのサイズが変更された時.
+		virtual void OnPaint();	// 画面の描画を要求された時.
+		virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);	// コマンドが発生した時.
+		virtual void OnHScroll(UINT nSBCode, UINT nPos);	// 水平方向スクロールバーのイベントが発生した時.
+		virtual void OnVScroll(UINT nSBCode, UINT nPos);	// 垂直方向スクロールバーのイベントが発生した時.
+		virtual void OnMouseMove(UINT nFlags, POINT pt);	// マウスが移動している時.
+		virtual void OnLButtonDown(UINT nFlags, POINT pt);	// マウスの左ボタンが押された時.
+		virtual void OnLButtonUp(UINT nFlags, POINT pt);		// マウスの左ボタンが離された時.
 
 };
-
-// 関数のプロトタイプ宣言.
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);	// ウィンドウプロシージャWindowProc.
 
 #endif

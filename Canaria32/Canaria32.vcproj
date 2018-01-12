@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MainWindow.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Window.cpp"
 				>
 			</File>
@@ -202,6 +206,10 @@
 			</File>
 			<File
 				RelativePath=".\MainApplication.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MainWindow.h"
 				>
 			</File>
 			<File
