@@ -49,6 +49,25 @@ BOOL CMainWindow::Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, 
 
 }
 
+// ファイル読み書きしたら, これでファイルパスをセット.
+void CMainWindow::SetCurrentFileName(LPCTSTR lpctszFileName){
+
+	// ファイルパスをセット.
+	m_tstrCurrentFileName = lpctszFileName;	// m_tstrCurrentFileNameにlpctszFileNameをセット.
+
+	// ファイルタイトルの取得とセット.
+	TCHAR tszFileNameTitle[_MAX_PATH] = {0};	// ファイル名の部分だけを格納するtszFileNameTitleを{0}で初期化.
+	GetFileTitle(lpctszFileName, tszFileNameTitle, _MAX_PATH);	// GetFileTitleでファイルタイトル取得.
+	m_tstrCurrentFileNameTitle = tszFileNameTitle;	// m_tstrCurrentFileNameTitleにtszFileNameTitleをセット.
+
+	// ウィンドウのタイトルにファイル名を表示する.
+	tstring tstrNewWindowTitle;	// 新しいウィンドウのタイトルtstrNewWindowTitle.
+	tstrNewWindowTitle = m_tstrCurrentFileNameTitle;	// ファイルタイトルをセット.
+	tstrNewWindowTitle = tstrNewWindowTitle + _T(" - Canaria");	// " - Canaria"を連結.
+	SetText(tstrNewWindowTitle.c_str());	// SetTextでtstrNewWindowTitleをセット.
+
+}
+
 // ウィンドウの作成が開始された時.
 int CMainWindow::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct){
 
@@ -131,6 +150,7 @@ int CMainWindow::OnFileOpen(WPARAM wParam, LPARAM lParam){
 		if (m_pPicture->LoadImage(hInstance, selDlg.m_tstrPath.c_str())){	// m_pPicture->LoadImageでロード.
 			// セット.
 			m_pPicture->SetImage();	// m_pPicture->SetImageでセット.
+			SetCurrentFileName(selDlg.m_tstrPath.c_str());	// SetCurrentFileNameでカレントパスをセット.
 		}
 
 	}
@@ -149,7 +169,8 @@ int CMainWindow::OnFileSaveAs(WPARAM wParam, LPARAM lParam){
 		
 		// セーブ.
 		m_pPicture->SaveImage(selDlg.m_tstrPath.c_str());	// m_pPicture->SaveImageでセーブ.
-		
+		SetCurrentFileName(selDlg.m_tstrPath.c_str());	// SetCurrentFileNameでカレントパスをセット.
+
 	}
 
 	// 処理していないので-1.
