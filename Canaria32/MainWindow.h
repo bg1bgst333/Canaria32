@@ -4,14 +4,14 @@
 
 // ヘッダのインクルード
 // 独自のヘッダ
-#include "Window.h"	// CWindow
+#include "MenuWindow.h"	// CMenuWindow
 #include "Picture.h"	// CPicture
 
 // マクロの定義
 #define SCROLLBAR_THICKNESS 16	// とりあえずスクロールバーの厚さはマクロで16としておく.
 
 // メインウィンドウクラスCMainWindow
-class CMainWindow : public CWindow{
+class CMainWindow : public CMenuWindow{
 
 	// publicメンバ
 	public:
@@ -25,12 +25,14 @@ class CMainWindow : public CWindow{
 		virtual ~CMainWindow();	// デストラクタ~CMainWindow()
 		// staticメンバ関数
 		static BOOL RegisterClass(HINSTANCE hInstance);	// ウィンドウクラス登録関数RegisterClass.
+		static BOOL RegisterClass(HINSTANCE hInstance, LPCTSTR lpszMenuName);	// ウィンドウクラス登録関数RegisterClass.(メニュー名指定バージョン.)
 		// メンバ関数
 		virtual BOOL Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, int iWidth, int iHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance);	// ウィンドウ作成関数Create.(ウィンドウクラス名省略バージョン.)
 		virtual int OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct);	// ウィンドウの作成が開始された時.
 		virtual void OnDestroy();	// ウィンドウが破棄された時.
 		virtual void OnSize(UINT nType, int cx, int cy);	// ウィンドウのサイズが変更された時.
-		virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);	// コマンドが発生した時.
+		virtual int OnFileOpen(WPARAM wParam, LPARAM lParam);	// "開く"を選択された時のハンドラ.
+		virtual int OnFileSaveAs(WPARAM wParam, LPARAM lParam);	// "名前を付けて保存"を選択された時のハンドラ.
 
 };
 

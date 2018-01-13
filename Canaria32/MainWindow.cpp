@@ -3,13 +3,11 @@
 #include <locale.h>	// ロケール
 // 独自のヘッダ
 #include "MainWindow.h"	// CMainWindow
+#include "FileDialog.h"	// CFileDialog
 #include "resource.h"		// リソース
 
-// static変数の宣言
-static CMainWindow *pMainWnd = NULL;	// staticでCMainWindowオブジェクトポインタpMainWndをNULLで初期化.
-
 // コンストラクタCMainWindow()
-CMainWindow::CMainWindow() : CWindow(){
+CMainWindow::CMainWindow() : CMenuWindow(){
 
 	// メンバの初期化.
 	m_pPicture = NULL;	// m_pPictureをNULLで初期化.
@@ -35,6 +33,14 @@ BOOL CMainWindow::RegisterClass(HINSTANCE hInstance){
 
 }
 
+// ウィンドウクラス登録関数RegisterClass.(メニュー名指定バージョン.)
+BOOL CMainWindow::RegisterClass(HINSTANCE hInstance, LPCTSTR lpszMenuName){
+
+	// ウィンドウプロシージャにはCWindow::StaticWndowProc, メニューlpszMenuNameを使う.
+	return CMenuWindow::RegisterClass(hInstance, _T("CMainWindow"), lpszMenuName);	// メニュー名を指定する.
+
+}
+
 // ウィンドウ作成関数Create.(ウィンドウクラス名省略バージョン.)
 BOOL CMainWindow::Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, int iWidth, int iHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance){// ウィンドウ作成関数Create.(ウィンドウクラス名省略バージョン.)
 
@@ -45,6 +51,15 @@ BOOL CMainWindow::Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, 
 
 // ウィンドウの作成が開始された時.
 int CMainWindow::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct){
+
+	// メニューバーの作成.
+	m_pMenuBar = new CMenuBar(hwnd);	// CMenuBarオブジェクトm_pMenuBarを作成.
+
+	// メニューのロード.
+	m_pMenuBar->LoadMenu(lpCreateStruct->hInstance, IDR_MENU1);	// LoadMenuでIDR_MENU1をロード.
+
+	// メニューのセット.
+	m_pMenuBar->SetMenu(hwnd);	// SetMenuでhwndにメニューをセット.
 
 	// ピクチャーの生成.
 	m_pPicture = new CPicture();	// CPictureオブジェクトを生成して, m_pPictureに格納.
@@ -68,6 +83,10 @@ int CMainWindow::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct){
 	SetScrollInfo(m_hPicture, SB_VERT, &m_scrollInfo, FALSE);	// SetScrollInfoでm_scrollInfoをセット.
 #endif
 
+	// メニューハンドラの追加.
+	AddCommandHandler(ID_FILE_OPEN, 0, (int(CWindow::*)(WPARAM, LPARAM))&CMainWindow::OnFileOpen);	// AddCommandHandlerでID_FILE_OPENに対するハンドラCMainWindow::OnFileOpenを登録.
+	AddCommandHandler(ID_FILE_SAVE_AS, 0, (int(CWindow::*)(WPARAM, LPARAM))&CMainWindow::OnFileSaveAs);	// AddCommandHandlerでID_FILE_SAVE_ASに対するハンドラCMainWindow::OnFileSaveAsを登録.
+
 	// 常にウィンドウ作成に成功するものとする.
 	return 0;	// 0を返すと, ウィンドウ作成に成功したということになる.
 
@@ -76,8 +95,12 @@ int CMainWindow::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct){
 // ウィンドウが破棄された時.
 void CMainWindow::OnDestroy(){
 
-	// 終了メッセージの送信.
-	PostQuitMessage(0);	// PostQuitMessageで終了コードを0としてWM_QUITメッセージを送信.
+	// メニューハンドラの削除.
+	DeleteCommandHandler(ID_FILE_OPEN, 0);	// DeleteCommandHandlerでID_FILE_OPENのハンドラを削除.
+	DeleteCommandHandler(ID_FILE_SAVE_AS, 0);	// DeleteCommandHandlerでID_FILE_SAVE_ASのハンドラを削除.
+
+	// CWindowのOnDestroyを呼ぶ.
+	CWindow::OnDestroy();	// CWindow::OnDestroyを呼ぶ.
 
 }
 
@@ -95,88 +118,41 @@ void CMainWindow::OnSize(UINT nType, int cx, int cy){
 
 }
 
-// コマンドが発生した時.
-BOOL  CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam){
+// "開く"を選択された時のハンドラ.
+int CMainWindow::OnFileOpen(WPARAM wParam, LPARAM lParam){
 
-	// コマンドの処理.
-	switch (LOWORD(wParam)){	// LOWORD(wParam)でリソースIDがわかるので, その値ごとに処理を振り分ける.
+	// "開く"ファイルの選択.
+	CFileDialog selDlg(NULL, _T("bmp"), _T("ビットマップ画像(*.bmp)|*.bmp|すべてのファイル(*.*)|*.*||"), OFN_FILEMUSTEXIST);	// CFileDialogオブジェクトselDlgを定義.
+	if (selDlg.ShowOpenFileDialog(m_hWnd)){	// selDlg.ShowOpenFileDialogで"開く"ファイルダイアログを表示.
 
-		// "開く(&O)..."
-		case ID_FILE_OPEN:
-
-			// ID_FILE_OPENブロック
-			{
-
-				// "開く"ファイルの選択.
-				// 構造体・配列の初期化.
-				OPENFILENAME ofn = {0};	// OPENFILENAME構造体ofnを{0}で初期化.
-				TCHAR tszPath[_MAX_PATH] = {0};	// ファイルパスtszPathを{0}で初期化.
-				// パラメータのセット.
-				ofn.lStructSize = sizeof(OPENFILENAME);	// sizeofでOPENFILENAME構造体のサイズをセット.
-				ofn.hwndOwner = m_hWnd;	// m_hWndをセット.
-				ofn.lpstrFilter = _T("ビットマップ画像(*.bmp)\0*.bmp\0すべてのファイル(*.*)\0*.*\0\0");	// ビットマップ画像とすべてのファイルのフィルタをセット.
-				ofn.lpstrFile = tszPath;	// tszPathをセット.
-				ofn.nMaxFile = _MAX_PATH;	// _MAX_PATHをセット.
-				ofn.Flags = OFN_FILEMUSTEXIST;	// ファイルが存在しないと抜けられない.
-				// "開く"ファイルダイアログの表示.
-				BOOL bRet = GetOpenFileName(&ofn);	// GetOpenFileNameでファイルダイアログを表示し, 選択されたファイル名を取得する.(戻り値をbRetに格納.)
-				if (bRet){	// 正常に選択された.
-
-					// インスタンスハンドルの取得.
-					HINSTANCE hInstance = (HINSTANCE)GetWindowLong(m_hWnd, GWLP_HINSTANCE);	// GetWindowLongでインスタンスハンドルを取得.
-					// ロード.
-					if (m_pPicture->LoadImage(hInstance, tszPath)){	// m_pPicture->LoadImageでロード.
-						// セット.
-						m_pPicture->SetImage();	// m_pPicture->SetImageでセット.
-					}
-
-				}
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// "名前を付けて保存(&A)..."
-		case ID_FILE_SAVE_AS:
-
-			// ID_FILE_SAVE_ASブロック
-			{
-
-				// "名前を付けて保存"するファイルの選択.
-				// 構造体・配列の初期化.
-				OPENFILENAME ofn = {0};	// OPENFILENAME構造体ofnを{0}で初期化.
-				TCHAR tszPath[_MAX_PATH] =  {0};	// ファイルパスtszPathを{0}で初期化.
-				// パラメータのセット.
-				ofn.lStructSize = sizeof(OPENFILENAME);	// sizeofでOPENFILENAME構造体のサイズをセット.
-				ofn.hwndOwner = m_hWnd;	// m_hWndをセット.
-				ofn.lpstrFilter = _T("ビットマップ画像(*.bmp)\0*.bmp\0すべてのファイル(*.*)\0*.*\0\0");	// ビットマップ画像とすべてのファイルのフィルタをセット.
-				ofn.lpstrFile = tszPath;	// tszPathをセット.
-				ofn.nMaxFile = _MAX_PATH;	// _MAX_PATHをセット.
-				ofn.Flags = OFN_OVERWRITEPROMPT;	// 既にファイルがある時, 上書きするかの確認を表示.
-				// "名前を付けて保存"ファイルダイアログを表示.
-				BOOL bRet = GetSaveFileName(&ofn);	// GetSaveFileNameでファイルダイアログを表示し, 選択されたファイル名を取得する.(戻り値をbRetに格納.)
-				if (bRet){	// 正常に選択された.
-					
-					// セーブ.
-					m_pPicture->SaveImage(tszPath);	// m_pPicture->SaveImageでセーブ.
-					
-				}
-
-			}
-		
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// それ以外.
-		default:
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+		// インスタンスハンドルの取得.
+		HINSTANCE hInstance = (HINSTANCE)GetWindowLong(m_hWnd, GWLP_HINSTANCE);	// GetWindowLongでインスタンスハンドルを取得.
+		// ロード.
+		if (m_pPicture->LoadImage(hInstance, selDlg.m_tstrPath.c_str())){	// m_pPicture->LoadImageでロード.
+			// セット.
+			m_pPicture->SetImage();	// m_pPicture->SetImageでセット.
+		}
 
 	}
 
-	// TRUE.
-	return TRUE;	// TRUEを返す.
+	// 処理していないので-1.
+	return -1;	// returnで-1を返す.
+
+}
+
+// "名前を付けて保存"を選択された時のハンドラ.
+int CMainWindow::OnFileSaveAs(WPARAM wParam, LPARAM lParam){
+
+	// "名前を付けて保存"ファイルの選択.
+	CFileDialog selDlg(NULL, _T("bmp"), _T("ビットマップ画像(*.bmp)|*.bmp|すべてのファイル(*.*)|*.*||"), OFN_OVERWRITEPROMPT);	// CFileDialogオブジェクトselDlgを定義.
+	if (selDlg.ShowSaveFileDialog(m_hWnd)){	// selDlg.ShowSaveFileDialogで"名前を付けて保存"ファイルダイアログを表示.
+		
+		// セーブ.
+		m_pPicture->SaveImage(selDlg.m_tstrPath.c_str());	// m_pPicture->SaveImageでセーブ.
+		
+	}
+
+	// 処理していないので-1.
+	return -1;	// returnで-1を返す.
 
 }
