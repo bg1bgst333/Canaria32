@@ -1,6 +1,7 @@
 // ヘッダのインクルード
 // 独自のヘッダ
 #include "Picture.h"	// CPicture
+#include "BinaryFile.h"	// CBinaryFile
 
 // コンストラクタCPicture
 CPicture::CPicture() : CCustomControl(){
@@ -108,6 +109,18 @@ BOOL CPicture::SaveImage(LPCTSTR lpctszImageName){
 	bfh.bfReserved1 = 0;	// ここは0をセット.
 	bfh.bfReserved2 = 0;	// ここは0をセット.
 
+#if 1
+	// ビットマップバイナリのファイル書き込み.
+	CBinaryFile *pBinaryFile = new CBinaryFile();	// CBinaryFileオブジェクトを作成し, ポインタをpBinaryFileに格納.
+	pBinaryFile->Set((BYTE *)&bfh, sizeof(BITMAPFILEHEADER));	// pBinaryFile->SetでBITMAPFILEHEADERのbfhをセット.
+	pBinaryFile->Write(lpctszImageName);	// pBinaryFile->Write(ファイル名引数ありバージョン)でファイルを開いて書き込み.
+	pBinaryFile->Set((BYTE *)&bi, sizeof(BITMAPINFOHEADER));	// pBinaryFile->SetでBITMAPINFOHEADERのbi(正確にはbi.bmiHeader)をセット.
+	pBinaryFile->Write();	// pBinaryFile->Write(ファイル名引数なしバージョン)で書き込み.
+	pBinaryFile->Set(lpBitsPixel, sizeof(BYTE) * bi.bmiHeader.biSizeImage);	// pBinaryFile->SetでlpBitsPixelをセット.
+	pBinaryFile->Write();	// pBinaryFile->Write(ファイル名引数なしバージョン)で書き込み.
+	delete pBinaryFile;	// pBinaryFileを解放.
+	delete[] lpBitsPixel;	// delete[]でlpBitsPixelを解放.
+#else
 	// ファイルの書き込み.
 	// 日本語ロケールのセット.
 	setlocale(LC_ALL, "Japanese");	// setlocaleで"Japanese"をセット.
@@ -126,6 +139,7 @@ BOOL CPicture::SaveImage(LPCTSTR lpctszImageName){
 	// メモリの解放.
 	free(path);	// freeでpathを解放.
 	delete[] lpBitsPixel;	// delete[]でlpBitsPixelを解放.
+#endif
 
 	// メンバにセット.
 	m_tstrImageName = lpctszImageName;	// m_tstrImageNameにlpctszImageNameをセット.

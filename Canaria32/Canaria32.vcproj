@@ -179,11 +179,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BinaryFile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\c_string_utility.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\CustomControl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\File.cpp"
 				>
 			</File>
 			<File
@@ -229,11 +237,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BinaryFile.h"
+				>
+			</File>
+			<File
 				RelativePath=".\c_string_utility.h"
 				>
 			</File>
 			<File
 				RelativePath=".\CustomControl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\File.h"
 				>
 			</File>
 			<File
