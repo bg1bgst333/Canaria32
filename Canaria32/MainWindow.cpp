@@ -126,9 +126,14 @@ void CMainWindow::OnDestroy(){
 // ウィンドウのサイズが変更された時.
 void CMainWindow::OnSize(UINT nType, int cx, int cy){
 
-	// メンバにセット.
-	MoveWindow(m_pPicture->m_hWnd, 0, 0, cx, cy, TRUE);	// MoveWindowでm_pPicture->m_hWndのサイズをクライアント領域と同じにする.
-	
+	// m_pPictureがある時.
+	if (m_pPicture != NULL){	// m_pPictureがNULLでない時.
+
+		// メンバにセット.
+		MoveWindow(m_pPicture->m_hWnd, 0, 0, cx, cy, TRUE);	// MoveWindowでm_pPicture->m_hWndのサイズをクライアント領域と同じにする.
+
+	}
+
 	// 自分のサイズを計測.
 	RECT rc = {0};
 	GetWindowRect(m_hWnd, &rc);
