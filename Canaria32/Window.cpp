@@ -10,6 +10,12 @@ CWindow::CWindow(){
 
 	// メンバの初期化.
 	m_hWnd = NULL;	// m_hWndをNULLで初期化.
+	m_x = 0;	// m_xに0を初期化.
+	m_y = 0;	// m_yに0を初期化.
+	m_iWidth = 0;	// m_iWidthに0を初期化.
+	m_iHeight = 0;	// m_iHeightに0を初期化.
+	//m_iClientAreaWidth = 0;	// m_iClientAreaWidthに0を初期化.
+	//m_iClientAreaHeight = 0;	// m_iClientAreaHeightに0を初期化.
 
 }
 
@@ -21,6 +27,12 @@ CWindow::~CWindow(){
 		DestroyWindow(m_hWnd);	// DestroyWindowでm_hWndを破棄.
 		m_hWnd = NULL;	// m_hWndにNULLをセット.
 	}
+	m_x = 0;	// m_xに0を代入.
+	m_y = 0;	// m_yに0を代入.
+	m_iWidth = 0;	// m_iWidthに0を代入.
+	m_iHeight = 0;	// m_iHeightに0を代入.
+	//m_iClientAreaWidth = 0;	// m_iClientAreaWidthに0を代入.
+	//m_iClientAreaHeight = 0;	// m_iClientAreaHeightに0を代入.
 
 }
 
@@ -162,6 +174,12 @@ BOOL CWindow::Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, int 
 // ウィンドウ作成関数Create.
 BOOL CWindow::Create(LPCTSTR lpctszClassName, LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, int iWidth, int iHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance){
 
+	// ウィンドウの位置・サイズをセット.
+	m_x = x;				// m_xにxを代入.
+	m_y = y;				// m_yにyを代入.
+	m_iWidth = iWidth;		// m_iWidthにiWidthを代入.
+	m_iHeight = iHeight;	// m_iHeight = iHeightを代入.
+
 	// ウィンドウの作成.
 	m_hWnd = CreateWindow(lpctszClassName, lpctszWindowName, dwStyle, x, y, iWidth, iHeight, hWndParent, hMenu, hInstance, this);	// CreateWindowでウィンドウを作成し, ハンドルをm_hWndに格納.(最後の引数にはthis(自分自身)を渡す.)
 	if (m_hWnd == NULL){	// m_hWndがNULLなら失敗.
@@ -171,6 +189,14 @@ BOOL CWindow::Create(LPCTSTR lpctszClassName, LPCTSTR lpctszWindowName, DWORD dw
 		return FALSE;	// FALSEを返す.
 
 	}
+
+	// GetWindowRectで生成後のRECTを取得し, 改めてサイズをセット.
+	RECT rc = {0};	// rcを{0}で初期化.
+	GetWindowRect(m_hWnd, &rc);	// GetWindowRectでrcを取得.
+	m_x = rc.left;	// m_xにrc.leftをセット.
+	m_y = rc.top;	// m_yにrc.topをセット.
+	m_iWidth = rc.right - rc.left;	// m_iWidthにrc.right - rc.leftをセット.
+	m_iHeight = rc.bottom - rc.top;	// m_iHeightにrc.bottom - rc.topをセット.
 
 	// 成功ならTRUE.
 	return TRUE;	// 成功なのでTRUEを返す.
@@ -238,20 +264,6 @@ LRESULT CWindow::DynamicWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			// 既定の処理へ向かう.
 			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
 
-		// 画面の描画を要求された時.
-		case WM_PAINT:
-
-			// WM_PAINTブロック
-			{
-
-				// OnPaintに任せる.
-				OnPaint();	// OnPaintを呼ぶ.
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
 		// コマンドが発生した時.
 		case WM_COMMAND:
 
@@ -263,97 +275,6 @@ LRESULT CWindow::DynamicWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			}
 
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// 水平方向のスクロールが発生した時.
-		case WM_HSCROLL:
-
-			// WM_HSCROLLブロック
-			{
-				
-				// OnHScrollに任せる.
-				OnHScroll(LOWORD(wParam), HIWORD(wParam));	// OnHScrollに任せる.
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// 垂直方向のスクロールが発生した時.
-		case WM_VSCROLL:
-
-			// WM_VSCROLLブロック
-			{
-
-				// OnVScrollに任せる.
-				OnVScroll(LOWORD(wParam), HIWORD(wParam));	// OnVScrollに任せる.
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// マウスの移動時.
-		case WM_MOUSEMOVE:
-
-			// WM_MOUSEMOVEブロック
-			{
-
-				// 変数の宣言
-				POINT pt;	// POINT構造体変数pt.
-
-				// 座標の取り出し.
-				pt.x = LOWORD(lParam);	// lParamの下位ワードが座標x.
-				pt.y = HIWORD(lParam);	// lParamの上位ワードが座標y.
-
-				// OnMouseMoveに任せる.
-				OnMouseMove(wParam, pt);	// OnMouseMoveにwParamとptを渡す.
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// マウスの左ボタンが押された時.
-		case WM_LBUTTONDOWN:
-
-			// WM_LBUTTONDOWNブロック
-			{
-
-				// 変数の宣言
-				POINT pt;	// POINT構造体変数pt.
-
-				// 座標の取り出し.
-				pt.x = LOWORD(lParam);	// lParamの下位ワードが座標x.
-				pt.y = HIWORD(lParam);	// lParamの上位ワードが座標y.
-
-				// OnLButtonDownに任せる.
-				OnLButtonDown(wParam, pt);	// OnLButtonDownにwParamとptを渡す.
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// マウスの左ボタンが離されたとき.
-		case WM_LBUTTONUP:
-
-			// WM_LBUTTONUPブロック
-			{
-
-				// 変数の宣言
-				POINT pt;	// POINT構造体変数pt.
-
-				// 座標の取り出し.
-				pt.x = LOWORD(lParam);	// lParamの下位ワードが座標x.
-				pt.y = HIWORD(lParam);	// lParamの上位ワードが座標y.
-
-				// OnLButtonUpに任せる.
-				OnLButtonUp(wParam, pt);	// OnLButtonUpにwParamとptを渡す.
-
-			}
-			
 			// 既定の処理へ向かう.
 			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
 
@@ -391,40 +312,10 @@ void CWindow::OnSize(UINT nType, int cx, int cy){
 
 }
 
-// 画面の描画を要求された時.
-void CWindow::OnPaint(){
-
-}
-
 // コマンドが発生した時.
 BOOL CWindow::OnCommand(WPARAM wParam, LPARAM lParam){
 
 	// 処理していないのでFALSE.
 	return FALSE;	// returnでFALSEを返す.
-
-}
-
-// 水平方向スクロールバーのイベントが発生した時.
-void CWindow::OnHScroll(UINT nSBCode, UINT nPos){
-
-}
-
-// 垂直方向スクロールバーのイベントが発生した時.
-void CWindow::OnVScroll(UINT nSBCode, UINT nPos){
-
-}
-
-// マウスが移動している時.
-void CWindow::OnMouseMove(UINT nFlags, POINT pt){
-
-}
-
-// マウスの左ボタンが押された時.
-void CWindow::OnLButtonDown(UINT nFlags, POINT pt){
-
-}
-
-// マウスの左ボタンが離された時.
-void CWindow::OnLButtonUp(UINT nFlags, POINT pt){
 
 }

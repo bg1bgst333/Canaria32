@@ -179,11 +179,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CustomControl.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MainApplication.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\MainWindow.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Picture.cpp"
 				>
 			</File>
 			<File
@@ -205,11 +213,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CustomControl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MainApplication.h"
 				>
 			</File>
 			<File
 				RelativePath=".\MainWindow.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Picture.h"
 				>
 			</File>
 			<File

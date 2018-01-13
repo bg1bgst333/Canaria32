@@ -16,13 +16,19 @@ class CWindow{
 
 		// publicメンバ変数
 		HWND m_hWnd;	// HWND型ウィンドウハンドルm_hWnd.
+		int m_x;		// ウィンドウの位置x座標m_x
+		int m_y;		// ウィンドウの位置y座標m_y
+		int m_iWidth;	// ウィンドウの幅m_iWidth
+		int m_iHeight;	// ウィンドウの高さm_iHeight
+		int m_iClientAreaWidth;		// クライアント領域幅
+		int m_iClientAreaHeight;	// クライアント領域高さ
 		// staticメンバ変数
 		static std::map<HWND, CWindow *>m_mapWindowMap;	// ウィンドウハンドルをキー, CWindowオブジェクトポインタを値とするマップm_mapWindowMap.
 
 		// publicメンバ関数
 		// コンストラクタ
 		CWindow();	// コンストラクタCWindow()
-		~CWindow();	// デストラクタ~CWindow()
+		virtual ~CWindow();	// デストラクタ~CWindow()
 
 		// staticメンバ関数
 		static BOOL RegisterClass(HINSTANCE hInstance);	// ウィンドウクラス登録関数RegisterClass.(ウィンドウクラス名省略バージョン.)
@@ -39,13 +45,7 @@ class CWindow{
 		virtual int OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct);	// ウィンドウの作成が開始された時.
 		virtual void OnDestroy();	// ウィンドウが破棄された時.
 		virtual void OnSize(UINT nType, int cx, int cy);	// ウィンドウのサイズが変更された時.
-		virtual void OnPaint();	// 画面の描画を要求された時.
 		virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);	// コマンドが発生した時.
-		virtual void OnHScroll(UINT nSBCode, UINT nPos);	// 水平方向スクロールバーのイベントが発生した時.
-		virtual void OnVScroll(UINT nSBCode, UINT nPos);	// 垂直方向スクロールバーのイベントが発生した時.
-		virtual void OnMouseMove(UINT nFlags, POINT pt);	// マウスが移動している時.
-		virtual void OnLButtonDown(UINT nFlags, POINT pt);	// マウスの左ボタンが押された時.
-		virtual void OnLButtonUp(UINT nFlags, POINT pt);		// マウスの左ボタンが離された時.
 
 };
 
