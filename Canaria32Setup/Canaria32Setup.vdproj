@@ -43,6 +43,17 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                }
+            }
         }
         "Release"
         {
@@ -59,6 +70,17 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                }
+            }
         }
     }
     "Deployable"
@@ -82,7 +104,7 @@
         {
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C74CE2D6E5CAC08E9AC7335175C98469"
             {
-            "SourcePath" = "8:comdlg32.dll"
+            "SourcePath" = "8:COMDLG32.dll"
             "TargetName" = "8:comdlg32.dll"
             "Tag" = "8:"
             "Folder" = "8:_F0BF09D8262F4BD296FAF6E02355BD65"
@@ -166,14 +188,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Canaria"
-        "ProductCode" = "8:{7A45327D-0701-426A-BD7E-B93EDD6A1FCC}"
-        "PackageCode" = "8:{B723A4C4-B64B-4B7D-80C6-12EF25741578}"
+        "ProductCode" = "8:{EE114DD5-5E52-45E1-980B-A2F195E1F409}"
+        "PackageCode" = "8:{78B14439-63B5-426B-8B3A-CD4386F9A5EB}"
         "UpgradeCode" = "8:{711B2C0C-8437-4589-9278-F9D82A20B86E}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.0.0"
+        "ProductVersion" = "8:0.0.1"
         "Manufacturer" = "8:B.G-STATION"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
